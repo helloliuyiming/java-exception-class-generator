@@ -17,20 +17,19 @@
                 </el-form-item>
 
                 <el-form-item label="baseException">
-                    <el-select v-model="config.settings.baseExceptionClassFullPath" placeholder="请选择">
+                    <el-select v-model="temp.baseException" filterable placeholder="请选择" @change="changeBaseException">
                         <el-option
                             v-for="item in predefine.baseExceptions"
-                            :key="item.className"
+                            :key="item.classFullName"
                             :label="item.className"
-                            :value="item.classPackage">
+                            :value="item.classFullName">
                             <span style="float: left">{{ item.className }}</span>
-                            <span style="float: right; color: #8492a6; font-size: 13px">{{ item.classPackage }}</span>
+                            <span style="float: right; color: #8492a6; font-size: 13px">{{ item.classFullName }}</span>
                         </el-option>
                     </el-select>
                 </el-form-item>
                 <el-checkbox v-model="config.settings.useLombok">lombok</el-checkbox>
                 <el-checkbox v-model="config.settings.hiddenSuffix">hiddenSuffix</el-checkbox>
-
             </el-form>
             <el-button type="info">导入配置</el-button>
             <el-button type="success">导出配置</el-button>
@@ -65,7 +64,7 @@
                                    @click="changeEditExceptionDialogVisible(scope.row)"></el-button>
                     </template>
                     <template v-else #default="scope">
-                        <el-input type="text" size="small" v-model="scope.row.data[item.prop]">
+                        <el-input type="text" size="small" v-model="scope.row.data[item.prop].value" :placeholder="scope.row.data[item.prop].defaultValue">
                         </el-input>
                     </template>
                 </el-table-column>
@@ -76,7 +75,6 @@
         </el-main>
         <el-dialog title="类结构编辑" :visible.sync="predefine.editExceptionDialogVisible">
             <template>
-
                 <el-form>
                     <div style="margin: 10px">
                         <h4>继承字段</h4>
@@ -131,6 +129,11 @@
                                     <el-input style="width: 200px" v-model="scope.row.defaultValue"></el-input>
                                 </template>
                             </el-table-column>
+                            <el-table-column label="非空" #default="scope">
+                                <template>
+                                    <el-checkbox style="width: 200px" v-model="scope.row.isNullAble"></el-checkbox>
+                                </template>
+                            </el-table-column>
                             <el-table-column label="操作">
                                 <template>
                                     <el-button type="danger">删除</el-button>
@@ -148,6 +151,22 @@
                 </span>
             </template>
         </el-dialog>
+
+
+        <el-dialog title="异常基类编辑器" :visible.sync="predefine.editBaseExceptionDialogVisible">
+            <template>
+                <el-form>
+                    <el-form-item>
+                        <el-input type="text" label="基类全限定名" style="width: 150px"/>
+                    </el-form-item>
+
+                </el-form>
+                <span class="dialog-footer">
+                    <el-button @click="predefine.editBaseExceptionDialogVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="predefine.editBaseExceptionDialogVisible = false">保 存</el-button>
+                </span>
+            </template>
+        </el-dialog>
     </el-container>
 </template>
 
@@ -156,6 +175,14 @@ import * as configUtil from '../util/config-util'
 export default {
     name: "Main",
     methods: {
+        changeBaseException(item){
+            console.log(item)
+            if (item == null) {
+                this.predefine.editBaseExceptionDialogVisible = true
+            }else {
+                this.config.settings.bas
+            }
+        },
         insertSub(id) {
             if (id == null || id === "") {
                 console.log("插入子级失败，id为空")
@@ -225,6 +252,9 @@ export default {
                 "editExceptionCache": {
                     "id": "l1:l1",
                     "exceptionName": "BadRequestException",
+                    "config":{
+                        "inheritable":false
+                    },
                     "data": {
                         "message": "message",
                         "httpCode": 200,
@@ -240,9 +270,6 @@ export default {
                             "defaultValue": "1"
                         }
                     ],
-                    "config":{
-                      "inheritable":true
-                    },
                     "inherited-fields": [
                         {
                             "fieldName": "message"
@@ -254,36 +281,42 @@ export default {
                             "fieldName": "messageForClient"
                         },
                         {
-                            "fieldName":"code","defaultValue":"200"}]}
+                            "fieldName": "code",
+                            "defaultValue": "200"
+                        }
+                    ]
+                },
+                "baseException":{
+
+                }
             },
             "predefine": {
                 "editExceptionDialogVisible": false,
+                "editBaseExceptionDialogVisible":false,
                 "baseExceptions": [
                     {
                         "className": "Exception",
-                        "classPackage": "java.lang.Exception"
+                        "classFullName": "java.lang.Exception",
+                        "classFields":[
+                            {
+                                "filed":"message",
+                                "type":"string"
+                            }
+                        ]
                     },
                     {
                         "className": "RuntimeException",
-                        "classPackage": "java.lang.RuntimeException"
-                    }
-                ],
-                "parameterTypeList":[
-                    {
-                        "className":"String",
-                        "package":"java.lang.String"
+                        "classFullName": "java.lang.RuntimeException",
+                        "classFields":[
+                            {
+                                "filed":"message",
+                                "type":"string"
+                            }
+                        ]
                     },
                     {
-                        "className":"Integer",
-                        "package":"java.lang.Integer"
-                    },
-                    {
-                        "className":"Float",
-                        "package":"java.lang.Float"
-                    },
-                    {
-                        "className":"Double",
-                        "package":"java.lang.Double"
+                        "className": "自定义",
+                        "classFullName": null
                     }
                 ]
             },
@@ -299,7 +332,13 @@ export default {
                 "settings": {
                     "basePackage": "me.lym.exception",
                     "baseExceptionClassName": "Exception",
-                    "baseExceptionClassFullPath": "java.lang.Exception",
+                    "baseExceptionClassFullName": "java.lang.Exception",
+                    "baseExceptionFields":[
+                        {
+                            "filed":"message",
+                            "type":"string"
+                        }
+                    ],
                     "useLombok": "true",
                     "suffix": "Exception",
                     "hiddenSuffix": true
@@ -341,21 +380,38 @@ export default {
                         "id": "l1",
                         "exceptionName": "ServerException",
                         "data": {
-                            "message": "message",
-                            "httpCode": 200,
-                            "messageForClient": "messageForClient",
-                            "code": "code"
+                            "message":{
+                                "value": "",
+                                "defaultValue": "1",
+                                "type": "string"
+                            },
+                            "httpCode": {
+                                "value": 200,
+                                "defaultValue": 200,
+                                "type": "string"
+                            },
+                            "messageForClient": {
+                                "value": "",
+                                "defaultValue": "messageForClient",
+                                "type": "string"
+                            },
+                            "code": {
+                                "value": "code",
+                                "defaultValue": "code",
+                                "type": "string"
+                            }
                         },
                         "new-fields": [
                             {
                                 "id": "1",
+                                "title": "",
                                 "fieldName": "newF1",
                                 "fieldType": "string",
                                 "defaultValue": "newF1"
                             },
                             {
-                                "fieldName": "code",
-                                "defaultValue": "3"
+                                "fieldName": "newF1",
+                                "defaultValue": "newF1"
                             }
                         ],
                         "config": {
@@ -369,15 +425,31 @@ export default {
                                     "inheritable": true
                                 },
                                 "data": {
-                                    "message": "message",
-                                    "httpCode": 200,
-                                    "messageForClient": "messageForClient",
-                                    "code": "code",
-                                    "newF1": "newF1"
+                                    "message":{
+                                        "value": "",
+                                        "defaultValue": "1",
+                                        "type": "string"
+                                    },
+                                    "httpCode": {
+                                        "value": 200,
+                                        "defaultValue": 200,
+                                        "type": "string"
+                                    },
+                                    "messageForClient": {
+                                        "value": "",
+                                        "defaultValue": "messageForClient",
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "value": "code",
+                                        "defaultValue": "code",
+                                        "type": "string"
+                                    }
                                 },
                                 "new-fields": [
                                     {
                                         "id": "1",
+                                        "title": "",
                                         "fieldName": "newF1",
                                         "fieldType": "string",
                                         "defaultValue": "1"
@@ -395,14 +467,30 @@ export default {
                                     "inheritable": true
                                 },
                                 "data": {
-                                    "message": "message",
-                                    "httpCode": 200,
-                                    "messageForClient": "messageForClient",
-                                    "code": "code",
-                                    "newF2": "newF2"
+                                    "message":{
+                                        "value": "",
+                                        "defaultValue": "1",
+                                        "type": "string"
+                                    },
+                                    "httpCode": {
+                                        "value": 200,
+                                        "defaultValue": 200,
+                                        "type": "string"
+                                    },
+                                    "messageForClient": {
+                                        "value": "",
+                                        "defaultValue": "messageForClient",
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "value": "code",
+                                        "defaultValue": "code",
+                                        "type": "string"
+                                    }
                                 },
                                 "new-fields": [
                                     {
+                                        "title": "",
                                         "fieldName": "newF2",
                                         "fieldType": "string",
                                         "defaultValue": "newF2"
@@ -413,7 +501,7 @@ export default {
                     }
                 ]
             }
-        };
+        }
     }
 }
 </script>

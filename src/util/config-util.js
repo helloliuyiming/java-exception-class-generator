@@ -80,7 +80,7 @@ export function copyExceptionStructureById(exceptions, id) {
     let newCleanException = JSON.parse(JSON.stringify(queryExceptionById(exceptions,id)));
     newCleanException.exceptionName = null;
     newCleanException.subException = [];
-    let parentId = this.queryParentId(id);
+    let parentId = queryParentId(id);
     if (parentId == null) {
         newCleanException.id = "l" + length;
     } else {
