@@ -196,7 +196,7 @@
              "baseExceptionFields":[
                  {
                      "field":"message",
-                     "type":"string"
+                     "type":"String"
                  }
              ],
              "useLombok": "true",
@@ -215,24 +215,6 @@
                  "prop": "message",
                  "title": "message",
                  "defaultValue": "defaultValue"
-             },
-             {
-                 "index": 2,
-                 "prop": "httpCode",
-                 "title": "http状态码",
-                 "defaultValue": "defaultValue"
-             },
-             {
-                 "index": 3,
-                 "prop": "code",
-                 "title": "编码",
-                 "defaultValue": "defaultValue"
-             },
-             {
-                 "index": 4,
-                 "prop": "messageForClient",
-                 "title": "提示信息",
-                 "defaultValue": "defaultValue"
              }
          ],
          "exceptions": [
@@ -244,35 +226,9 @@
                          "value": "",
                          "defaultValue": "1",
                          "type": "string"
-                     },
-                     "httpCode": {
-                         "value": 200,
-                         "defaultValue": 200,
-                         "type": "string"
-                     },
-                     "messageForClient": {
-                         "value": "",
-                         "defaultValue": "messageForClient",
-                         "type": "string"
-                     },
-                     "code": {
-                         "value": "code",
-                         "defaultValue": "code",
-                         "type": "string"
                      }
                  },
                  "newFields": [
-                     {
-                         "id": "1",
-                         "title": "",
-                         "fieldName": "newF1",
-                         "fieldType": "string",
-                         "defaultValue": "newF1"
-                     },
-                     {
-                         "fieldName": "newF2",
-                         "defaultValue": "newF2"
-                     }
                  ],
                  "config": {
                      "inheritable": true
@@ -289,35 +245,9 @@
                                  "value": "",
                                  "defaultValue": "1",
                                  "type": "string"
-                             },
-                             "httpCode": {
-                                 "value": 200,
-                                 "defaultValue": 200,
-                                 "type": "string"
-                             },
-                             "messageForClient": {
-                                 "value": "",
-                                 "defaultValue": "messageForClient",
-                                 "type": "string"
-                             },
-                             "code": {
-                                 "value": "code",
-                                 "defaultValue": "code",
-                                 "type": "string"
                              }
                          },
                          "newFields": [
-                             {
-                                 "id": "1",
-                                 "title": "",
-                                 "fieldName": "newF1",
-                                 "fieldType": "string",
-                                 "defaultValue": "1"
-                             },
-                             {
-                                 "fieldName": "code",
-                                 "defaultValue": "200"
-                             }
                          ]
                      },
                      {
@@ -332,29 +262,8 @@
                                  "defaultValue": "1",
                                  "type": "string"
                              },
-                             "httpCode": {
-                                 "value": 200,
-                                 "defaultValue": 200,
-                                 "type": "string"
-                             },
-                             "messageForClient": {
-                                 "value": "",
-                                 "defaultValue": "messageForClient",
-                                 "type": "string"
-                             },
-                             "code": {
-                                 "value": "code",
-                                 "defaultValue": "code",
-                                 "type": "string"
-                             }
                          },
                          "newFields": [
-                             {
-                                 "title": "",
-                                 "fieldName": "newF2",
-                                 "fieldType": "string",
-                                 "defaultValue": "newF2"
-                             }
                          ]
                      }
                  ]

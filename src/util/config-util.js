@@ -1,15 +1,21 @@
 
 function findNextIndex(exceptions){
+    if (exceptions === undefined || exceptions == null) {
+        return 1;
+    }
+
     let index = 0;
     for (let exception of exceptions) {
         let id = exception.id;
         let lastId = id.split(":").pop();
         let i = lastId.substr(1, lastId.length - 1);
+        i = parseInt(i);
+        console.log("lastId="+lastId+" ;i="+i)
         if (i > index) {
             index = i;
         }
     }
-    return ++index;
+    return parseInt(index)+1;
 }
 
 export function adapterExceptionForEditDialog(originException){
@@ -59,6 +65,7 @@ function queryBaseExceptionStructure(configData){
     for(let baseExceptionField of baseException.baseExceptionFields){
         let field = new Object();
         field.type = baseExceptionField.type
+        field.defaultValue = ""
         exception.data[baseExceptionField.field] = field
     }
     return exception;
@@ -145,7 +152,8 @@ export function updateExceptionById(configData,newException){
         return;
     }
 
-    let oldException = queryExceptionById(newException.id);
+
+    let oldException = queryExceptionById(configData.config.exceptions, newException.id);
 
     let tempExceptionArray = new Array();
 
@@ -172,16 +180,22 @@ export function updateExceptionById(configData,newException){
         //新增字段
         if (newField.newFlag && !newField.deleteFlag) {
             //增加一列到cols
-            let colObj = {"index":config.cols.length+1,"prop":newField.fieldName,"title":newField.title};
+
+            let colObj = new Object();
+            colObj.index = config.cols.length+1
+            colObj.prop = newField.fieldName
+            colObj.title = newField.title
             config.cols.push(colObj);
             //给当前exception及其子类data添加数据域
-            let newDataObj = {"defaultValue": newField.defaultValue, "type": newField.fieldType, "value": null};
-            let field = {
-                "title": newField.title,
-                "fieldName": newField.fieldName,
-                "fieldType": newField.fieldType,
-                "defaultValue": newField.defaultValue
-            };
+            let newDataObj = new Object();
+            newDataObj.defaultValue = newField.defaultValue
+            newDataObj.type = newField.fieldType
+            newDataObj.value = ""
+            let field = new Object();
+            field.title = newField.title
+            field.fieldName = newField.fieldName
+            field.fieldType = newField.fieldType
+            field.defaultValue = newField.defaultValue
             oldException.newFields.push(field);
             tempExceptionArray.push(oldException)
             while (tempExceptionArray.length !== 0) {
@@ -266,12 +280,12 @@ export function updateExceptionById(configData,newException){
 }
 
 
-function queryExceptionStructureById(exceptions,id) {
+function queryExceptionStructureById(configData,id) {
     if (id == null) {
         return null;
     }
-
-    let exception = queryBaseExceptionStructure();
+    let exceptions = configData.config.exceptions
+    let exception = queryBaseExceptionStructure(configData);
 
     let splits = id.split(":");
     id = null;
@@ -310,23 +324,39 @@ export function insertCoeval(configData,id){
     let index = 0;
     if (split.length === 1) {
         exception = queryBaseExceptionStructure(configData);
-        index = findNextIndex(exceptions) + 1;
-        exception.id = queryParentId(id) + ":l" + index;
+        index = findNextIndex(exceptions);
+        console.log("newIndex="+index)
+        exception.id = "l" + index;
+        console.log("新增加的exception：")
+        console.log(exception)
         exceptions.push(exception)
         return
     }else {
-        exception = queryExceptionStructureById(exceptions,queryParentId(id));
-        index = findNextIndex(queryParentExceptionById(id).subException);
+        exception = queryExceptionStructureById(configData,queryParentId(id));
+        index = findNextIndex(queryParentExceptionById(exceptions,id).subException);
     }
     exception.id = queryParentId(id) + ":l" + index;
+    console.log("新增加的exception：")
+    console.log(exception)
     queryParentExceptionById(exceptions,id).subException.push(exception);
 }
 
-export function insertSub(exceptions,id) {
-    // let split = id.split(":");
-    let exception = queryExceptionStructureById(exceptions, id);
-    let index = findNextIndex(queryExceptionById(exceptions,id).subException)+1;
+export function insertSub(configData,id) {
+    let split = id.split(":");
+    let index = 0;
+    let exceptions = queryExceptionById(configData.config.exceptions,id)
+    if (split.length === 1) {
+        index = findNextIndex(configData.config.exceptions)+1
+    }else {
+        index = findNextIndex(exceptions.subException)+1;
+    }
+    let exception = queryExceptionStructureById(configData, id);
+
 
     exception.id =id + ":l" + index;
-    queryExceptionById(id).subException.push(exception);
+
+    if (exceptions.subException == null) {
+        exceptions.subException = new Array();
+    }
+    exceptions.subException.push(exception);
 }

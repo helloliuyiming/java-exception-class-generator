@@ -48,7 +48,7 @@
                 lazy
                 :tree-props="{children: 'subException'}">
                 <el-table-column v-for="item in config.cols" :key="item.index" min-width="300px"
-                                 :label="item.title">
+                                 :label="item.title" >
                     <template v-if="item.prop==='exceptionName'" #default="scope">
                         <el-input type="text" size="small" v-model="scope.row['exceptionName']" style="width: 180px">
                             <template #append v-if="!config.settings.hiddenSuffix">{{
@@ -64,8 +64,9 @@
                                    @click="changeEditExceptionDialogVisible(scope.row)"></el-button>
                     </template>
                     <template v-else #default="scope">
-                        <el-input type="text" size="small" v-model="scope.row.data[item.prop].value" :placeholder="scope.row.data[item.prop].defaultValue">
+                        <el-input type="text" v-if="scope.row.data[item.prop] !== undefined" size="small" v-model="scope.row.data[item.prop].value" :placeholder="scope.row.data[item.prop].defaultValue">
                         </el-input>
+                        <span v-else></span>
                     </template>
                 </el-table-column>
 
@@ -190,7 +191,7 @@ export default {
                 console.log("插入子级失败，id为空")
                 return;
             }
-            configUtil.insertSub(this.configData.config.exceptions,id)
+            configUtil.insertSub(this,id)
         },
         insertCoeval(id) {
             if (id == null || id === "") {
@@ -211,9 +212,11 @@ export default {
             }
             console.log("oldException")
             console.log(exception)
-            configUtil.updateExceptionById(this.config,exception)
+            configUtil.updateExceptionById(this,exception)
             console.log("newException")
             console.log(configUtil.queryExceptionById(this.config.exceptions,exception.id))
+            console.log("newConfigData")
+            console.log(JSON.stringify(this.config,null,2))
             this.predefine.editExceptionDialogVisible = false;
         },
         addNewField() {
