@@ -99,7 +99,7 @@
                     </div>
                     <div>
                         <h4>添加字段</h4>
-                        <el-table :data="temp.editExceptionCache['new-fields']">
+                        <el-table :data="temp.editExceptionCache['newFields']">
                             <el-table-column label="标题" #default="scope">
                                 <template>
                                     <el-input style="width: 200px" v-model="scope.row.title"></el-input>
@@ -112,7 +112,7 @@
                             </el-table-column>
                             <el-table-column label="类型" #default="scope">
                                 <template>
-                                    <el-select v-model="scope.row.fieldType" placeholder="请选择">
+                                    <el-select v-model="scope.row.fieldType" placeholder="请选择" @change="scope.row.updateFlag = true">
                                         <el-option
                                             v-for="item in predefine.parameterTypeList"
                                             :key="item.className"
@@ -126,17 +126,18 @@
                             </el-table-column>
                             <el-table-column label="默认值" #default="scope">
                                 <template>
-                                    <el-input style="width: 200px" v-model="scope.row.defaultValue"></el-input>
+                                    <el-input style="width: 200px" v-model="scope.row.defaultValue" @change="scope.row.updateFlag = true"></el-input>
                                 </template>
                             </el-table-column>
                             <el-table-column label="非空" #default="scope">
                                 <template>
-                                    <el-checkbox style="width: 200px" v-model="scope.row.isNullAble"></el-checkbox>
+                                    <el-checkbox style="width: 200px" v-model="scope.row.isNullAble" @change="scope.row.updateFlag = true"></el-checkbox>
                                 </template>
                             </el-table-column>
-                            <el-table-column label="操作">
+                            <el-table-column label="操作" #default="scope">
                                 <template>
-                                    <el-button type="danger">删除</el-button>
+                                    <el-button type="danger" @click="scope.row.deleteFlag = !scope.row.deleteFlag">删除</el-button>
+                                    <span v-if="scope.row.deleteFlag">已删除</span>
                                 </template>
                             </el-table-column>
                         </el-table>
@@ -172,6 +173,7 @@
 
 <script>
 import * as configUtil from '../util/config-util'
+import {configData} from "@/data/config";
 export default {
     name: "Main",
     methods: {
@@ -180,7 +182,7 @@ export default {
             if (item == null) {
                 this.predefine.editBaseExceptionDialogVisible = true
             }else {
-                this.config.settings.bas
+                this.config.settings.baseExceptionClassFullName = item.classFullName
             }
         },
         insertSub(id) {
@@ -188,37 +190,14 @@ export default {
                 console.log("插入子级失败，id为空")
                 return;
             }
-            let parentException = configUtil.queryExceptionById(this.config.exceptions,id);
-            console.log(2)
-            let newException = null;
-            let index = 1;
-            if (parentException.subException != null && parentException.subException.length > 0) {
-                newException = configUtil.copyExceptionStructure(this.config.exceptions,parentException.subException[0]);
-                index = parentException.subException.length + 1;
-            } else {
-                parentException.subException = [];
-                newException = configUtil.copyExceptionStructureById(this.config.exceptions,id);
-            }
-            console.log(3)
-            newException.id = parentException.id + ":" + index
-            parentException.subException.push(newException);
+            configUtil.insertSub(this.configData.config.exceptions,id)
         },
         insertCoeval(id) {
             if (id == null || id === "") {
                 console.log("插入同级失败，id为空")
                 return;
             }
-            let newException = configUtil.copyExceptionStructureById(this.config.exceptions,id);
-            let parentId = configUtil.queryParentId(id);
-            if (parentId == null) {
-                this.config.exceptions.push(newException)
-                return
-            }
-            let parentException = configUtil.queryExceptionById(this.config.exceptions,parentId);
-            if (parentException.subException == null || parentException.subException.length === 0) {
-                parentException.subException = [];
-            }
-            parentException.subException.push(newException);
+            configUtil.insertCoeval(this,id)
         },
         changeEditExceptionDialogVisible(exception) {
             if (this.predefine.editExceptionDialogVisible === false) {
@@ -243,265 +222,14 @@ export default {
             newFieldObj['id'] = null;
             newFieldObj['title'] = '';
             newFieldObj['fieldName'] = ""
-            this.temp.editExceptionCache['new-fields'].push(newFieldObj)
+            newFieldObj.newFlag = true;
+            newFieldObj.deleteFlag = false;
+            newFieldObj.updateFlag = false;
+            this.temp.editExceptionCache['newFields'].push(newFieldObj)
         }
     },
     data() {
-        return {
-            "temp": {
-                "editExceptionCache": {
-                    "id": "l1:l1",
-                    "exceptionName": "BadRequestException",
-                    "config":{
-                        "inheritable":false
-                    },
-                    "data": {
-                        "message": "message",
-                        "httpCode": 200,
-                        "messageForClient": "messageForClient",
-                        "code": "code",
-                        "newF1": "newF1"
-                    },
-                    "new-fields": [
-                        {
-                            "id": "",
-                            "fieldName": "newF1",
-                            "fieldType": "string",
-                            "defaultValue": "1"
-                        }
-                    ],
-                    "inherited-fields": [
-                        {
-                            "fieldName": "message"
-                        },
-                        {
-                            "fieldName": "httpCode"
-                        },
-                        {
-                            "fieldName": "messageForClient"
-                        },
-                        {
-                            "fieldName": "code",
-                            "defaultValue": "200"
-                        }
-                    ]
-                },
-                "baseException":{
-
-                }
-            },
-            "predefine": {
-                "editExceptionDialogVisible": false,
-                "editBaseExceptionDialogVisible":false,
-                "baseExceptions": [
-                    {
-                        "className": "Exception",
-                        "classFullName": "java.lang.Exception",
-                        "classFields":[
-                            {
-                                "filed":"message",
-                                "type":"string"
-                            }
-                        ]
-                    },
-                    {
-                        "className": "RuntimeException",
-                        "classFullName": "java.lang.RuntimeException",
-                        "classFields":[
-                            {
-                                "filed":"message",
-                                "type":"string"
-                            }
-                        ]
-                    },
-                    {
-                        "className": "自定义",
-                        "classFullName": null
-                    }
-                ]
-            },
-            "config": {
-                "meta": {
-                    "version": "1.0Beta",
-                    "author": "lym",
-                    "create_time": "2021-09-14",
-                    "update_time": "2021-09-14",
-                    "support": "elementui",
-                    "description": "ceshi"
-                },
-                "settings": {
-                    "basePackage": "me.lym.exception",
-                    "baseExceptionClassName": "Exception",
-                    "baseExceptionClassFullName": "java.lang.Exception",
-                    "baseExceptionFields":[
-                        {
-                            "filed":"message",
-                            "type":"string"
-                        }
-                    ],
-                    "useLombok": "true",
-                    "suffix": "Exception",
-                    "hiddenSuffix": true
-                },
-                "cols": [
-                    {
-                        "index": 0,
-                        "prop": "exceptionName",
-                        "title": "类名",
-                        "defaultValue": "defaultValue"
-                    },
-                    {
-                        "index": 1,
-                        "prop": "message",
-                        "title": "message",
-                        "defaultValue": "defaultValue"
-                    },
-                    {
-                        "index": 2,
-                        "prop": "httpCode",
-                        "title": "http状态码",
-                        "defaultValue": "defaultValue"
-                    },
-                    {
-                        "index": 3,
-                        "prop": "code",
-                        "title": "编码",
-                        "defaultValue": "defaultValue"
-                    },
-                    {
-                        "index": 4,
-                        "prop": "messageForClient",
-                        "title": "提示信息",
-                        "defaultValue": "defaultValue"
-                    }
-                ],
-                "exceptions": [
-                    {
-                        "id": "l1",
-                        "exceptionName": "ServerException",
-                        "data": {
-                            "message":{
-                                "value": "",
-                                "defaultValue": "1",
-                                "type": "string"
-                            },
-                            "httpCode": {
-                                "value": 200,
-                                "defaultValue": 200,
-                                "type": "string"
-                            },
-                            "messageForClient": {
-                                "value": "",
-                                "defaultValue": "messageForClient",
-                                "type": "string"
-                            },
-                            "code": {
-                                "value": "code",
-                                "defaultValue": "code",
-                                "type": "string"
-                            }
-                        },
-                        "new-fields": [
-                            {
-                                "id": "1",
-                                "title": "",
-                                "fieldName": "newF1",
-                                "fieldType": "string",
-                                "defaultValue": "newF1"
-                            },
-                            {
-                                "fieldName": "newF1",
-                                "defaultValue": "newF1"
-                            }
-                        ],
-                        "config": {
-                            "inheritable": true
-                        },
-                        "subException": [
-                            {
-                                "id": "l1:l1",
-                                "exceptionName": "BadRequestException",
-                                "config": {
-                                    "inheritable": true
-                                },
-                                "data": {
-                                    "message":{
-                                        "value": "",
-                                        "defaultValue": "1",
-                                        "type": "string"
-                                    },
-                                    "httpCode": {
-                                        "value": 200,
-                                        "defaultValue": 200,
-                                        "type": "string"
-                                    },
-                                    "messageForClient": {
-                                        "value": "",
-                                        "defaultValue": "messageForClient",
-                                        "type": "string"
-                                    },
-                                    "code": {
-                                        "value": "code",
-                                        "defaultValue": "code",
-                                        "type": "string"
-                                    }
-                                },
-                                "new-fields": [
-                                    {
-                                        "id": "1",
-                                        "title": "",
-                                        "fieldName": "newF1",
-                                        "fieldType": "string",
-                                        "defaultValue": "1"
-                                    },
-                                    {
-                                        "fieldName": "code",
-                                        "defaultValue": "200"
-                                    }
-                                ]
-                            },
-                            {
-                                "id": "l1:l2",
-                                "exceptionName": "BadGatewayException",
-                                "config": {
-                                    "inheritable": true
-                                },
-                                "data": {
-                                    "message":{
-                                        "value": "",
-                                        "defaultValue": "1",
-                                        "type": "string"
-                                    },
-                                    "httpCode": {
-                                        "value": 200,
-                                        "defaultValue": 200,
-                                        "type": "string"
-                                    },
-                                    "messageForClient": {
-                                        "value": "",
-                                        "defaultValue": "messageForClient",
-                                        "type": "string"
-                                    },
-                                    "code": {
-                                        "value": "code",
-                                        "defaultValue": "code",
-                                        "type": "string"
-                                    }
-                                },
-                                "new-fields": [
-                                    {
-                                        "title": "",
-                                        "fieldName": "newF2",
-                                        "fieldType": "string",
-                                        "defaultValue": "newF2"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-        }
+        return configData
     }
 }
 </script>

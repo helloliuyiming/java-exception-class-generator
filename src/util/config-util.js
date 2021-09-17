@@ -1,12 +1,26 @@
-export function adapterExceptionForEditDialog(exceptions){
-    if (exceptions == null) {
+
+function findNextIndex(exceptions){
+    let index = 0;
+    for (let exception of exceptions) {
+        let id = exception.id;
+        let lastId = id.split(":").pop();
+        let i = lastId.substr(1, lastId.length - 1);
+        if (i > index) {
+            index = i;
+        }
+    }
+    return ++index;
+}
+
+export function adapterExceptionForEditDialog(originException){
+    if (originException == null) {
         return;
     }
-    exceptions = JSON.parse(JSON.stringify(exceptions));
-    let newFields = exceptions['new-fields'];
-    exceptions['inherited-fields'] = new Array();
-    let inheritedFields = exceptions['inherited-fields'];
-    let dataObj = exceptions['data']
+    let newException = JSON.parse(JSON.stringify(originException));
+    let newFields = newException['newFields'];
+    newException['inherited-fields'] = new Array();
+    let inheritedFields = newException['inherited-fields'];
+    let dataObj = newException['data']
     for (let key in dataObj) {
         let newField = newFields.find(item=>{
             if (item.fieldName === key) {
@@ -16,15 +30,41 @@ export function adapterExceptionForEditDialog(exceptions){
         if (newField == null) {
             newField = new Object();
             newField.fieldName = key;
+            newField.defaultValue = dataObj[key].defaultValue;
+            newField.fieldType = dataObj[key].fieldType;
             inheritedFields.push(newField)
-        }else if (newField['id'] == null) {
+        }else if (newField['title'] === undefined) {
             inheritedFields.push(newField);
             let index = newFields.indexOf(newField);
             newFields.splice(index,1)
         }
     }
-    return exceptions;
+    for (let newField of newFields) {
+        newField.updateFlag = false;
+        newField.deleteFlag = false;
+        newField.newFlag = false;
+    }
+    return newException;
 }
+
+function queryBaseExceptionStructure(configData){
+    let baseException = configData.config.settings
+    let exception = {};
+    exception.exceptionName = null;
+    exception.subException = new Array();
+    exception.data = {};
+    exception.config = {"inheritable": true};
+    exception.newFields = new Array();
+
+    for(let baseExceptionField of baseException.baseExceptionFields){
+        let field = new Object();
+        field.type = baseExceptionField.type
+        exception.data[baseExceptionField.field] = field
+    }
+    return exception;
+}
+
+
 
 
 export function queryExceptionById(exceptions,id) {
@@ -87,7 +127,7 @@ export function copyExceptionStructureById(exceptions, id) {
         newCleanException.id = parentId + ":l" + length;
     }
 
-    newCleanException["new-fields"] = [];
+    newCleanException["newFields"] = [];
     for (let key in newCleanException.data) {
         newCleanException.data[key] = null;
     }
@@ -98,71 +138,195 @@ export function copyExceptionStructure(exceptions,originException) {
     return copyExceptionStructureById(exceptions,originException.id);
 }
 
-export function updateExceptionById(config,newException){
-    let allException = config.exceptions
+export function updateExceptionById(configData,newException){
+
+    let config = configData.config
     if (newException == null || newException.id == null) {
         return;
     }
 
-    let oldException = queryExceptionById(allException, newException.id);
-    let oldData = oldException.data
-    let oldCols = [];
-    for (let item of oldException['new-fields']) {
-        var oc = config.cols;
-        var oldCol = oc.find(function (x){
-            return x.prop===item.fieldName
-        })
-        if (oldCol != null) {
-            oldCols.push(oldCol);
-        }
-    }
-    oldException.config = newException.config;
-    oldException.exceptionName = newException.exceptionName;
-    //删除oldException所有data，new-fields数据
-    oldException.data = {};
-    oldException['new-fields'] = newException['new-fields'];
-    //遍历新的继承列表：添加到oldException.data里面，有默认值添加到new-fields，并为data赋值
-    for (let newFieldItem of newException['new-fields']) {
-        let oldCol = oldCols.find(oldColItem=>{
-            return newFieldItem.fieldName === oldColItem.prop
-        })
+    let oldException = queryExceptionById(newException.id);
 
-        let index = config.cols[config.cols.length-1].index+1;
-        if (oldCol == null) {
-            //插入到cols一个新的col
-            let newCol = new Object();
-            newCol.index = index;
-            index++;
-            newCol.prop = newFieldItem.fieldName;
-            newCol.title = newFieldItem.title;
-            newCol.defaultValue = newFieldItem.defaultValue
-            config.cols.push(newCol);
-        }else {
-            //从oldCols中移除
-            let delIndex = oldCols.indexOf(oldCol);
-            oldCols.splice(delIndex, 1);
-        }
-        if (Object.prototype.hasOwnProperty.call(oldData,newFieldItem.fieldName)) {
-            oldException.data[newFieldItem.fieldName] = oldData[newFieldItem.fieldName];
-        }else {
-            oldException.data[newFieldItem.fieldName] = newFieldItem.defaultValue;
+    let tempExceptionArray = new Array();
+
+    //更改newException及其子类下所有默认值
+    for (let inheritField of newException['inherited-fields']) {
+        tempExceptionArray.push(oldException)
+        while (tempExceptionArray.length !== 0) {
+            let tempException = tempExceptionArray.pop();
+            if (tempException.subException != null) {
+                for (let e of tempException.subException) {
+                    tempExceptionArray.push(e);
+                }
+            }
+            tempException.data[inheritField.fieldName].defaultValue = inheritField.defaultValue
         }
     }
 
-    //遍历oldCols，剩下的都是上个版本有这个版本没有的，需要删除
-    for (let item of oldCols) {
-        let delIndex = config.cols.indexOf(item);
-        config.cols.splice(delIndex, 1);
-    }
-    for (let item in newException['inherited-fields']) {
-        if (item.defaultValue != null) {
-            oldException['new-fields'].push(item);
+    for (let newField of newException['newFields']) {
+        //新增又给删了，所以没什么意义不处理
+        if (newField.newFlag && newField.deleteFlag) {
+            continue;
         }
-        item = newException['inherited-fields'][item];
-        if (Object.prototype.hasOwnProperty.call(oldData,item.fieldName)) {
-            oldException.data[item.fieldName] = oldData[item.fieldName];
+
+        //新增字段
+        if (newField.newFlag && !newField.deleteFlag) {
+            //增加一列到cols
+            let colObj = {"index":config.cols.length+1,"prop":newField.fieldName,"title":newField.title};
+            config.cols.push(colObj);
+            //给当前exception及其子类data添加数据域
+            let newDataObj = {"defaultValue": newField.defaultValue, "type": newField.fieldType, "value": null};
+            let field = {
+                "title": newField.title,
+                "fieldName": newField.fieldName,
+                "fieldType": newField.fieldType,
+                "defaultValue": newField.defaultValue
+            };
+            oldException.newFields.push(field);
+            tempExceptionArray.push(oldException)
+            while (tempExceptionArray.length !== 0) {
+                let tempException = tempExceptionArray.pop();
+                tempException.data[newField.fieldName] = newDataObj
+                if (tempException.subException != null) {
+                    for (let e of tempException.subException) {
+                        tempExceptionArray.push(e);
+                    }
+                }
+            }
+            continue;
+        }
+
+        //删除字段
+        if (!newField.newFlag && newField.deleteFlag) {
+            //删除cols数据
+            let deleteCol = config.cols.find(col=>{
+                return col.prop === newField.fieldName
+            })
+            let deleteIndex = config.cols.indexOf(deleteCol);
+            config.cols.splice(deleteCol, 1);
+            for (let index = 0; index < config.cols.length; index++) {
+                config.cols[index].id = index
+            }
+            //删除newField数据
+            let deleteField = oldException.newFields.find(item=>{
+                return item.fieldName = newField.fieldName
+            })
+            deleteIndex = oldException.indexOf(deleteField);
+            oldException.newFields.splice(deleteIndex, 1);
+
+            //删除exception及其子类data数据
+            tempExceptionArray.push(oldException)
+            while (tempExceptionArray.length !== 0) {
+                let tempException = tempExceptionArray.pop();
+                delete tempException.data[newField.fieldName]
+                if (tempException.subException != null) {
+                    for (let e of tempException.subException) {
+                        tempExceptionArray.push(e);
+                    }
+                }
+            }
+            continue;
+        }
+
+        //更新字段
+        if (!newField.newFlag && newField.updateFlag) {
+            //更新col
+            let oldCol = config.cols.find(item=>{
+                return item.prop===newField.originFieldName
+            })
+            oldCol.prop = newField.fieldName
+            oldCol.title = newField.title
+
+            //更新newFields
+            let oldField = oldException.newFields.find(item=>{
+                return item.fieldName === newField.fieldName;
+            })
+            oldField.fieldName = newField.fieldName
+            oldField.defaultValue = newField.defaultValue
+            oldField.fieldType = newField.fieldType
+
+            //更新data
+            tempExceptionArray.push(oldException);
+            while (tempExceptionArray.length !== 0) {
+                let tempException = tempExceptionArray.pop();
+                if (tempException.subException != null) {
+                    for (let e of tempException.subException) {
+                        tempExceptionArray.push(e);
+                    }
+                }
+                tempException.data[newField.fieldName] = {"value":tempException.data[newField.originFieldName].value}
+                delete tempException.data[newField.originFieldName]
+                tempException.data[newField.fieldName].defaultValue = newField.defaultValue
+                tempException.data[newField.fieldName].type = newField.fieldType
+            }
+            continue;
+        }
+    }
+
+}
+
+
+function queryExceptionStructureById(exceptions,id) {
+    if (id == null) {
+        return null;
+    }
+
+    let exception = queryBaseExceptionStructure();
+
+    let splits = id.split(":");
+    id = null;
+    let currentException = null;
+    for (let split of splits) {
+        if (id == null) {
+            id = split;
+            currentException = exceptions.find(item=>{
+                return item.id === id;
+            });
         }else {
-            oldException.data[item.fieldName] = item.defaultValue;
+            id = id + ":" + split;
+            currentException = currentException.subException.find(item=>{
+                return item.id === id;
+            });
         }
+
+        for (let newField of currentException.newFields) {
+            let oldData = exception.data[newField.fieldName]
+            if (oldData == null) {
+                oldData = {"defaultValue":newField.defaultValue,"type":newField.fieldType}
+                exception.data[newField.fieldName] = oldData
+            }else {
+                oldData.defaultValue = newField.defaultValue
+            }
+        }
+
     }
+    return exception;
+}
+
+export function insertCoeval(configData,id){
+    let exceptions = configData.config.exceptions
+    let split = id.split(":");
+    let exception = null;
+    let index = 0;
+    if (split.length === 1) {
+        exception = queryBaseExceptionStructure(configData);
+        index = findNextIndex(exceptions) + 1;
+        exception.id = queryParentId(id) + ":l" + index;
+        exceptions.push(exception)
+        return
+    }else {
+        exception = queryExceptionStructureById(exceptions,queryParentId(id));
+        index = findNextIndex(queryParentExceptionById(id).subException);
+    }
+    exception.id = queryParentId(id) + ":l" + index;
+    queryParentExceptionById(exceptions,id).subException.push(exception);
+}
+
+export function insertSub(exceptions,id) {
+    // let split = id.split(":");
+    let exception = queryExceptionStructureById(exceptions, id);
+    let index = findNextIndex(queryExceptionById(exceptions,id).subException)+1;
+
+    exception.id =id + ":l" + index;
+    queryExceptionById(id).subException.push(exception);
 }
