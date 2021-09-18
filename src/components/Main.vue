@@ -36,7 +36,7 @@
             <el-button type="danger">
                 重置
             </el-button>
-            <el-button type="primary">
+            <el-button type="primary" @click="generate">
                 生成
             </el-button>
             <h3>数据</h3>
@@ -115,12 +115,12 @@
                                 <template>
                                     <el-select v-model="scope.row.fieldType" placeholder="请选择" @change="scope.row.updateFlag = true">
                                         <el-option
-                                            v-for="item in predefine.parameterTypeList"
-                                            :key="item.className"
-                                            :label="item.className"
-                                            :value="item.className">
-                                            <span style="float: left">{{ item.className }}</span>
-                                            <span style="float: right; color: #8492a6; font-size: 13px">{{ item.package }}</span>
+                                            v-for="item in predefine.types"
+                                            :key="item.type"
+                                            :label="item.type"
+                                            :value="item.type">
+                                            <span style="float: left">{{ item.type }}</span>
+                                            <span style="float: right; color: #8492a6; font-size: 13px">{{ item.classFullName }}</span>
                                         </el-option>
                                     </el-select>
                                 </template>
@@ -173,17 +173,19 @@
 </template>
 
 <script>
-import * as configUtil from '../util/config-util'
-import {configData} from "@/data/config";
+import * as configUtil from '../util/configUtil'
 export default {
     name: "Main",
     methods: {
+        generate(){
+            configUtil.generate()
+        },
         changeBaseException(item){
             console.log(item)
             if (item == null) {
                 this.predefine.editBaseExceptionDialogVisible = true
             }else {
-                this.config.settings.baseExceptionClassFullName = item.classFullName
+                this.config.settings.baseException.className = item.className
             }
         },
         insertSub(id) {
@@ -231,8 +233,11 @@ export default {
             this.temp.editExceptionCache['newFields'].push(newFieldObj)
         }
     },
+    watch: {
+
+    },
     data() {
-        return configData
+        return configUtil.loadConfigData()
     }
 }
 </script>

@@ -1,4 +1,4 @@
- export let configData = {
+{
      "temp": {
          "editExceptionCache": {
              "id": "l1",
@@ -261,7 +261,7 @@
                                  "value": "",
                                  "defaultValue": "1",
                                  "type": "string"
-                             },
+                             }
                          },
                          "newFields": [
                          ]

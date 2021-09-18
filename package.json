@@ -8,8 +8,11 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "auto-format": "^1.1.1",
     "core-js": "^3.6.5",
     "element-ui": "^2.15.6",
+    "file-saver": "^2.0.5",
+    "jszip": "^3.7.1",
     "v-fit-columns": "^0.2.0",
     "vue": "^2.6.11"
   },
