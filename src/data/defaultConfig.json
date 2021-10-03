@@ -7,22 +7,22 @@
                  "message": {
                      "value": "",
                      "defaultValue": "1",
-                     "type": "string"
+                     "type": "String"
                  },
                  "httpCode": {
                      "value": 200,
                      "defaultValue": 200,
-                     "type": "string"
+                     "type": "String"
                  },
                  "messageForClient": {
                      "value": "",
                      "defaultValue": "messageForClient",
-                     "type": "string"
+                     "type": "String"
                  },
                  "code": {
                      "value": "code",
                      "defaultValue": "code",
-                     "type": "string"
+                     "type": "String"
                  }
              },
              "newFields": [
@@ -30,7 +30,7 @@
                      "id": "1",
                      "title": "",
                      "fieldName": "newF1",
-                     "fieldType": "string",
+                     "fieldType": "String",
                      "defaultValue": "newF1",
                      "updateFlag": false,
                      "deleteFlag": false,
@@ -58,22 +58,22 @@
                          "message": {
                              "value": "",
                              "defaultValue": "1",
-                             "type": "string"
+                             "type": "String"
                          },
                          "httpCode": {
                              "value": 200,
                              "defaultValue": 200,
-                             "type": "string"
+                             "type": "String"
                          },
                          "messageForClient": {
                              "value": "",
                              "defaultValue": "messageForClient",
-                             "type": "string"
+                             "type": "String"
                          },
                          "code": {
                              "value": "code",
                              "defaultValue": "code",
-                             "type": "string"
+                             "type": "String"
                          }
                      },
                      "newFields": [
@@ -81,7 +81,7 @@
                              "id": "1",
                              "title": "",
                              "fieldName": "newF1",
-                             "fieldType": "string",
+                             "fieldType": "String",
                              "defaultValue": "1"
                          },
                          {
@@ -100,29 +100,29 @@
                          "message": {
                              "value": "",
                              "defaultValue": "1",
-                             "type": "string"
+                             "type": "String"
                          },
                          "httpCode": {
                              "value": 200,
                              "defaultValue": 200,
-                             "type": "string"
+                             "type": "String"
                          },
                          "messageForClient": {
                              "value": "",
                              "defaultValue": "messageForClient",
-                             "type": "string"
+                             "type": "String"
                          },
                          "code": {
                              "value": "code",
                              "defaultValue": "code",
-                             "type": "string"
+                             "type": "String"
                          }
                      },
                      "newFields": [
                          {
                              "title": "",
                              "fieldName": "newF2",
-                             "fieldType": "string",
+                             "fieldType": "String",
                              "defaultValue": "newF2"
                          }
                      ]
@@ -160,7 +160,7 @@
                  "classFields":[
                      {
                          "field":"message",
-                         "type":"string"
+                         "type":"String"
                      }
                  ]
              },
@@ -170,7 +170,7 @@
                  "classFields":[
                      {
                          "field":"message",
-                         "type":"string"
+                         "type":"String"
                      }
                  ]
              },
@@ -257,13 +257,14 @@
                      "message":{
                          "value": "",
                          "defaultValue": "1",
-                         "type": "string"
+                         "type": "String"
                      }
                  },
                  "newFields": [
                  ],
                  "config": {
-                     "inheritable": true
+                     "inheritable": true,
+                     "package": ""
                  },
                  "subException": [
                      {
@@ -276,7 +277,7 @@
                              "message":{
                                  "value": "",
                                  "defaultValue": "1",
-                                 "type": "string"
+                                 "type": "String"
                              }
                          },
                          "newFields": [
@@ -292,7 +293,7 @@
                              "message":{
                                  "value": "",
                                  "defaultValue": "1",
-                                 "type": "string"
+                                 "type": "String"
                              }
                          },
                          "newFields": [

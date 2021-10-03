@@ -54,7 +54,7 @@ export function adapterExceptionForEditDialog(originException){
 }
 
 function queryBaseExceptionStructure(configData){
-    let baseException = configData.config.settings
+    let baseException = configData.config.settings.baseException
     let exception = {};
     exception.exceptionName = null;
     exception.subException = new Array();
@@ -62,7 +62,7 @@ function queryBaseExceptionStructure(configData){
     exception.config = {"inheritable": true};
     exception.newFields = new Array();
 
-    for(let baseExceptionField of baseException.baseExceptionFields){
+    for(let baseExceptionField of baseException.Fields){
         let field = new Object();
         field.type = baseExceptionField.type
         field.defaultValue = ""
@@ -155,6 +155,7 @@ export function updateExceptionById(configData,newException){
 
     let oldException = queryExceptionById(configData.config.exceptions, newException.id);
 
+    oldException.config = newException.config
     let tempExceptionArray = new Array();
 
     //更改newException及其子类下所有默认值
@@ -318,6 +319,7 @@ function queryExceptionStructureById(configData,id) {
 }
 
 export function insertCoeval(configData,id){
+    console.log(configData)
     let exceptions = configData.config.exceptions
     let split = id.split(":");
     let exception = null;
@@ -336,29 +338,31 @@ export function insertCoeval(configData,id){
         index = findNextIndex(queryParentExceptionById(exceptions,id).subException);
     }
     exception.id = queryParentId(id) + ":l" + index;
-    console.log("新增加的exception：")
-    console.log(exception)
-    queryParentExceptionById(exceptions,id).subException.push(exception);
+    let parentException = queryParentExceptionById(exceptions,id);
+    exception.config.inheritable = true;
+    exception.config.package = parentException.config.package
+    parentException.subException.push(exception);
 }
 
 export function insertSub(configData,id) {
     let split = id.split(":");
     let index = 0;
-    let exceptions = queryExceptionById(configData.config.exceptions,id)
+    let parentException = queryExceptionById(configData.config.exceptions,id)
     if (split.length === 1) {
         index = findNextIndex(configData.config.exceptions)+1
     }else {
-        index = findNextIndex(exceptions.subException)+1;
+        index = findNextIndex(parentException.subException)+1;
     }
     let exception = queryExceptionStructureById(configData, id);
 
 
     exception.id =id + ":l" + index;
-
-    if (exceptions.subException == null) {
-        exceptions.subException = new Array();
+    exception.config.inheritable = true;
+    exception.config.package = parentException.config.package
+    if (parentException.subException == null) {
+        parentException.subException = new Array();
     }
-    exceptions.subException.push(exception);
+    parentException.subException.push(exception);
 }
 
 import defaultConfigData from '../data/defaultConfig.json'
@@ -384,42 +388,64 @@ export function saveConfigData(){
 }
 
 import JsZip from 'jszip'
-// import { saveAs } from 'file-saver'
+import { saveAs } from 'file-saver'
 import Formatter from "auto-format"
 
-export function generate(){
+export function generate(configData){
+
+    let packageObj = new Array();
+    configData = JSON.parse(JSON.stringify(configData,null,2))
+
+    let parentException = configData.config.settings.baseException.className
+    let parentExceptionFullName = configData.config.settings.baseException.classFullName;
+    // let basePackage = configData.config.settings.basePackage
+    let suffix = configData.config.settings.suffix
 
     let exceptionArray = new Array();
-    for (let e of defaultConfigData.config.exceptions) {
-        exceptionArray.push(e)
+    for (let e of configData.config.exceptions) {
+        e.parentException = parentException
+        e.parentExceptionFullName = parentExceptionFullName
+
+        exceptionArray.push(e);
     }
-
-    // let fileMap = new Map();
-
-    let parentException = defaultConfigData.config.settings.baseException.className
-    let parentExceptionFullName = defaultConfigData.config.settings.baseException.classFullName;
-    let basePackage = defaultConfigData.config.settings.basePackage
-    let suffix = defaultConfigData.config.settings.suffix
-
     let zip = new JsZip();
+    var indentToken = "    ";
+    var javaFormatter = Formatter.createJavaFormatter(indentToken);
+
 
     while (exceptionArray.length !== 0) {
 
-
         let exception = exceptionArray.pop();
+        if (exception.exceptionName == null) {
+            continue;
+        }
         let importSet = new Set();
-        importSet.add(parentExceptionFullName)
-        let classPackageInfo = "package "+basePackage+";\n";
+        importSet.add(exception.parentExceptionFullName)
+        if (exception.config.package == null || exception.config.package === "") {
+            exception.config.package = configData.config.settings.basePackage;
+        }
+        let classPackageInfo = "package "+exception.config.package+";\n";
         let classConstructorInfo = "";
         let classFieldInfo = "";
         let classMethodInfo = "";
-        let classCodeInfo = "public class "+exception.exceptionName+suffix+" extends "+parentException+" { \n";
+        let classCodeInfo = "public class "+exception.exceptionName+suffix+" extends "+exception.parentException+" { \n";
+        let defaultConstructor = "public "+exception.exceptionName+suffix+"() {";
+        let fullParameterStatement = "public "+exception.exceptionName+suffix+"(";
+        let fullParameterConstructorBody = "\nthis();";
         for (let field in exception.data) {
 
-            let newField = exception.newFields.find(item=>{
+            fullParameterStatement+= exception.data[field].type+" "+field+", ";
+            fullParameterConstructorBody+="\nthis."+field+" = "+field+";"
+            if (exception.data[field].value != null && exception.data[field].value !== ""){
+                defaultConstructor+="\nthis."+field+" = "+exception.data[field].value+";";
+            }else if (exception.data[field].defaultValue != null && exception.data[field].defaultValue !== ""){
+                defaultConstructor+="\nthis."+field+" = "+exception.data[field].defaultValue+";";
+            }
+
+            let newNewField = exception.newFields.find(item=>{
                 return item.fieldName === field;
             })
-            let isInherit = newField != null && newField.fieldType !=null
+            let isInherit = !(newNewField != null && newNewField.fieldType !=null)
 
             let fieldData = exception.data[field];
             classFieldInfo += "private "+fieldData.type+" "+field+" ;\n"
@@ -438,27 +464,55 @@ export function generate(){
                 "}\n\n"
         }
 
-        classCodeInfo+=classConstructorInfo+"\n"+classFieldInfo+"\n"+classMethodInfo+"\n}"
+        if (exception.subException != null) {
+            for (let subException of exception.subException) {
+                console.log("subException:");
+                console.log(subException);
+                subException.parentException = exception.exceptionName;
+                subException.parentExceptionFullName = exception.config.package+"."+exception.exceptionName;
+                exceptionArray.push(subException);
+            }
+        }
 
-        console.log("==========="+exception.exceptionName+"================")
-        console.log(classPackageInfo + "\n" + classCodeInfo);
+        if (fullParameterStatement.charAt(fullParameterStatement.length - 2) === ',') {
+            fullParameterStatement = fullParameterStatement.substr(0, fullParameterStatement.length - 2);
+        }
 
-        console.log("===========格式化之后=============")
-        var indentToken = "    ";
-        var javaFormatter = Formatter.createJavaFormatter(indentToken);
-        var formattedCode = javaFormatter.format(classPackageInfo + "\n" + classCodeInfo);
-        console.log(formattedCode)
+        let fullParameterConstructor = fullParameterStatement+"){"+fullParameterConstructorBody+"\n}\n";
+        defaultConstructor+="\n}\n"
 
-        let folder = zip.folder("com.lym")
-        folder.file(exception.exceptionName+".java",formattedCode)
+        classConstructorInfo+=defaultConstructor+"\n"+fullParameterConstructor;
+        classCodeInfo+=classFieldInfo+"\n"+classConstructorInfo+"\n"+classMethodInfo+"\n}"
+        let classFile = classPackageInfo + "\n" + classCodeInfo
+        let formattedCode = javaFormatter.format(classFile);
+        formattedCode = classFile;
+        if (packageObj[exception.config.package] == null) {
+            packageObj[exception.config.package] = new Array();
+        }
+        let fileObj = new Object();
+        fileObj.fileName = exception.exceptionName +suffix+ ".java";
+        fileObj.formattedCode = formattedCode;
+        packageObj[exception.config.package].push(fileObj)
+
+
+        // console.log("==========="+exception.exceptionName+"================");
+        // console.log(classFile);
+
+        // console.log("===========格式化之后=============")
+        // console.log(formattedCode)
 
     }
 
-    zip.generateAsync({type:"string"})
+    for (let packageInfo in packageObj) {
+        let folder = zip.folder(packageInfo.replaceAll(".","\\"));
+        for (let fileDataObj of packageObj[packageInfo]) {
+            folder.file(fileDataObj.fileName,fileDataObj.formattedCode)
+        }
+    }
+
+    zip.generateAsync({type:"blob"})
         .then(function(content) {
-            // see FileSaver.js
-            // saveAs(content, "example.zip");
-            console.log("done"+content)
+            saveAs(content, "exceptions.zip");
         });
 
 }
