@@ -459,9 +459,9 @@ export function generate(configData){
             if (isInherit) {
                 classMethodInfo += "@Override\n";
             }
-            classMethodInfo+="public void set"+field.charAt(0).toUpperCase()+field.slice(1)+"("+fieldData.type+" "+field+") {\n" +
-                "this."+field +"="+field+";\n" +
-                "}\n\n"
+            // classMethodInfo+="public void set"+field.charAt(0).toUpperCase()+field.slice(1)+"("+fieldData.type+" "+field+") {\n" +
+            //     "this."+field +"="+field+";\n" +
+            //     "}\n\n"
         }
 
         if (exception.subException != null) {
