@@ -428,7 +428,11 @@ export function generate(configData){
         let classConstructorInfo = "";
         let classFieldInfo = "";
         let classMethodInfo = "";
-        let classCodeInfo = "public class "+exception.exceptionName+suffix+" extends "+exception.parentException+" { \n";
+        let classCodeInfo = "public class "+exception.exceptionName+suffix+" extends "+exception.parentException;
+        if (exception.id.split(":").length>1){
+            classCodeInfo += suffix;
+        }
+        classCodeInfo += " { \n";
         let defaultConstructor = "public "+exception.exceptionName+suffix+"() {";
         let fullParameterStatement = "public "+exception.exceptionName+suffix+"(";
         let fullParameterConstructorBody = "\nthis();";
@@ -436,10 +440,21 @@ export function generate(configData){
 
             fullParameterStatement+= exception.data[field].type+" "+field+", ";
             fullParameterConstructorBody+="\nthis."+field+" = "+field+";"
+
             if (exception.data[field].value != null && exception.data[field].value !== ""){
-                defaultConstructor+="\nthis."+field+" = "+exception.data[field].value+";";
+                defaultConstructor+="\nthis."+field+" = ";
+                if (exception.data[field].type==="String"){
+                    defaultConstructor+=" \"" +exception.data[field].value+"\";"
+                }else {
+                    defaultConstructor += exception.data[field].value+";";
+                }
             }else if (exception.data[field].defaultValue != null && exception.data[field].defaultValue !== ""){
-                defaultConstructor+="\nthis."+field+" = "+exception.data[field].defaultValue+";";
+                defaultConstructor+="\nthis."+field+" = ";
+                if (exception.data[field].type==="String"){
+                    defaultConstructor+=" \"" +exception.data[field].defaultValue+"\";"
+                }else {
+                    defaultConstructor += exception.data[field].defaultValue+";";
+                }
             }
 
             let newNewField = exception.newFields.find(item=>{
@@ -456,9 +471,9 @@ export function generate(configData){
                 "return this."+field+";\n" +
                 "}\n\n";
 
-            if (isInherit) {
-                classMethodInfo += "@Override\n";
-            }
+            // if (isInherit) {
+            //     classMethodInfo += "@Override\n";
+            // }
             // classMethodInfo+="public void set"+field.charAt(0).toUpperCase()+field.slice(1)+"("+fieldData.type+" "+field+") {\n" +
             //     "this."+field +"="+field+";\n" +
             //     "}\n\n"
