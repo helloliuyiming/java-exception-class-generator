@@ -398,33 +398,30 @@ export function generate(configData){
 
     let parentException = configData.config.settings.baseException.className
     let parentExceptionFullName = configData.config.settings.baseException.classFullName;
-    // let basePackage = configData.config.settings.basePackage
+    let parentExceptionPackage = getClassPackageByFullName(parentExceptionFullName);
     let suffix = configData.config.settings.suffix
 
     let exceptionArray = new Array();
     for (let e of configData.config.exceptions) {
         e.parentException = parentException
         e.parentExceptionFullName = parentExceptionFullName
-
+        e.parentExceptionPackage = parentExceptionPackage;
         exceptionArray.push(e);
     }
     let zip = new JsZip();
-    var indentToken = "    ";
+    var indentToken = "\t";
     var javaFormatter = Formatter.createJavaFormatter(indentToken);
 
-
     while (exceptionArray.length !== 0) {
-
         let exception = exceptionArray.pop();
         if (exception.exceptionName == null) {
             continue;
         }
+
         let importSet = new Set();
-        importSet.add(exception.parentExceptionFullName)
-        if (exception.config.package == null || exception.config.package === "") {
-            exception.config.package = configData.config.settings.basePackage;
-        }
-        let classPackageInfo = "package "+exception.config.package+";\n";
+        importSet.add(exception.parentExceptionFullName);
+
+        let classPackageInfo = "package "+exception.config.package+";";
         let classConstructorInfo = "";
         let classFieldInfo = "";
         let classMethodInfo = "";
@@ -432,30 +429,15 @@ export function generate(configData){
         if (exception.id.split(":").length>1){
             classCodeInfo += suffix;
         }
+
         classCodeInfo += " { \n";
-        let defaultConstructor = "public "+exception.exceptionName+suffix+"() {";
+        let defaultConstructor = "public "+exception.exceptionName+suffix+"() {}\n";
         let fullParameterStatement = "public "+exception.exceptionName+suffix+"(";
-        let fullParameterConstructorBody = "\nthis();";
+        let fullParameterConstructorBody = ";";
         for (let field in exception.data) {
 
             fullParameterStatement+= exception.data[field].type+" "+field+", ";
             fullParameterConstructorBody+="\nthis."+field+" = "+field+";"
-
-            if (exception.data[field].value != null && exception.data[field].value !== ""){
-                defaultConstructor+="\nthis."+field+" = ";
-                if (exception.data[field].type==="String"){
-                    defaultConstructor+=" \"" +exception.data[field].value+"\";"
-                }else {
-                    defaultConstructor += exception.data[field].value+";";
-                }
-            }else if (exception.data[field].defaultValue != null && exception.data[field].defaultValue !== ""){
-                defaultConstructor+="\nthis."+field+" = ";
-                if (exception.data[field].type==="String"){
-                    defaultConstructor+=" \"" +exception.data[field].defaultValue+"\";"
-                }else {
-                    defaultConstructor += exception.data[field].defaultValue+";";
-                }
-            }
 
             let newNewField = exception.newFields.find(item=>{
                 return item.fieldName === field;
@@ -463,20 +445,18 @@ export function generate(configData){
             let isInherit = !(newNewField != null && newNewField.fieldType !=null)
 
             let fieldData = exception.data[field];
-            classFieldInfo += "private "+fieldData.type+" "+field+" ;\n"
+            classFieldInfo += "private "+fieldData.type+" "+field+" = "
+            if (fieldData.value != null) {
+                classFieldInfo+=fieldData.value+" ;\n"
+            }else {
+                classFieldInfo+=fieldData.defaultValue+" ;\n"
+            }
             if (isInherit) {
                 classMethodInfo += "@Override\n";
             }
             classMethodInfo += "public "+fieldData.type+" get"+field.charAt(0).toUpperCase()+field.slice(1)+"(){\n" +
                 "return this."+field+";\n" +
                 "}\n\n";
-
-            // if (isInherit) {
-            //     classMethodInfo += "@Override\n";
-            // }
-            // classMethodInfo+="public void set"+field.charAt(0).toUpperCase()+field.slice(1)+"("+fieldData.type+" "+field+") {\n" +
-            //     "this."+field +"="+field+";\n" +
-            //     "}\n\n"
         }
 
         if (exception.subException != null) {
@@ -485,6 +465,7 @@ export function generate(configData){
                 console.log(subException);
                 subException.parentException = exception.exceptionName;
                 subException.parentExceptionFullName = exception.config.package+"."+exception.exceptionName;
+                subException.parentExceptionPackage = getClassPackageByFullName(subException.parentExceptionFullName);
                 exceptionArray.push(subException);
             }
         }
@@ -494,7 +475,6 @@ export function generate(configData){
         }
 
         let fullParameterConstructor = fullParameterStatement+"){"+fullParameterConstructorBody+"\n}\n";
-        defaultConstructor+="\n}\n"
 
         classConstructorInfo+=defaultConstructor+"\n"+fullParameterConstructor;
         classCodeInfo+=classFieldInfo+"\n"+classConstructorInfo+"\n"+classMethodInfo+"\n}"
@@ -508,13 +488,6 @@ export function generate(configData){
         fileObj.fileName = exception.exceptionName +suffix+ ".java";
         fileObj.formattedCode = formattedCode;
         packageObj[exception.config.package].push(fileObj)
-
-
-        // console.log("==========="+exception.exceptionName+"================");
-        // console.log(classFile);
-
-        // console.log("===========格式化之后=============")
-        // console.log(formattedCode)
 
     }
 
@@ -530,4 +503,11 @@ export function generate(configData){
             saveAs(content, "exceptions.zip");
         });
 
+}
+
+function getClassPackageByFullName(classFullName) {
+    if (classFullName===null) return null;
+    let splites = classFullName.split(".");
+    if (splites.length<=1) return "";
+    return classFullName.substr(0,classFullName.length-splites[splites.length-1].length-1);
 }
