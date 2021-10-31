@@ -252,7 +252,7 @@
          "exceptions": [
              {
                  "id": "l1",
-                 "exceptionName": "ServerException",
+                 "exceptionName": "Server",
                  "data": {
                      "message":{
                          "value": "",
@@ -264,14 +264,17 @@
                  ],
                  "config": {
                      "inheritable": true,
-                     "package": ""
+                     "package": "",
+                     "defaultPackage": "me.lym.exception"
                  },
                  "subException": [
                      {
                          "id": "l1:l1",
-                         "exceptionName": "BadRequestException",
+                         "exceptionName": "BadRequest",
                          "config": {
-                             "inheritable": true
+                             "inheritable": true,
+                             "package": "",
+                             "defaultPackage": "me.lym.exception"
                          },
                          "data": {
                              "message":{
@@ -285,9 +288,11 @@
                      },
                      {
                          "id": "l1:l2",
-                         "exceptionName": "BadGatewayException",
+                         "exceptionName": "BadGateway",
                          "config": {
-                             "inheritable": true
+                             "inheritable": true,
+                             "package": "",
+                             "defaultPackage": "me.lym.exception"
                          },
                          "data": {
                              "message":{

@@ -319,7 +319,6 @@ function queryExceptionStructureById(configData,id) {
 }
 
 export function insertCoeval(configData,id){
-    console.log(configData)
     let exceptions = configData.config.exceptions
     let split = id.split(":");
     let exception = null;
@@ -327,10 +326,8 @@ export function insertCoeval(configData,id){
     if (split.length === 1) {
         exception = queryBaseExceptionStructure(configData);
         index = findNextIndex(exceptions);
-        console.log("newIndex="+index)
         exception.id = "l" + index;
-        console.log("新增加的exception：")
-        console.log(exception)
+
         exceptions.push(exception)
         return
     }else {
@@ -420,8 +417,12 @@ export function generate(configData){
 
         let importSet = new Set();
         importSet.add(exception.parentExceptionFullName);
-
-        let classPackageInfo = "package "+exception.config.package+";";
+        let classPackageInfo = "package ";
+        if (exception.config.package != null&&exception.config.package!=="") {
+            classPackageInfo+=exception.config.package+";";
+        }else {
+            classPackageInfo+=exception.config.defaultPackage+";";
+        }
         let classConstructorInfo = "";
         let classFieldInfo = "";
         let classMethodInfo = "";
@@ -433,7 +434,7 @@ export function generate(configData){
         classCodeInfo += " { \n";
         let defaultConstructor = "public "+exception.exceptionName+suffix+"() {}\n";
         let fullParameterStatement = "public "+exception.exceptionName+suffix+"(";
-        let fullParameterConstructorBody = ";";
+        let fullParameterConstructorBody = "";
         for (let field in exception.data) {
 
             fullParameterStatement+= exception.data[field].type+" "+field+", ";
@@ -461,8 +462,6 @@ export function generate(configData){
 
         if (exception.subException != null) {
             for (let subException of exception.subException) {
-                console.log("subException:");
-                console.log(subException);
                 subException.parentException = exception.exceptionName;
                 subException.parentExceptionFullName = exception.config.package+"."+exception.exceptionName;
                 subException.parentExceptionPackage = getClassPackageByFullName(subException.parentExceptionFullName);
@@ -481,18 +480,25 @@ export function generate(configData){
         let classFile = classPackageInfo + "\n" + classCodeInfo
         let formattedCode = javaFormatter.format(classFile);
         formattedCode = classFile;
-        if (packageObj[exception.config.package] == null) {
+
+        if (exception.config.package != null &&exception.config.package!=="" && packageObj[exception.config.package] == null) {
             packageObj[exception.config.package] = new Array();
+        }else if (packageObj[exception.config.defaultPackage] == null) {
+            packageObj[exception.config.defaultPackage] = new Array();
         }
         let fileObj = new Object();
         fileObj.fileName = exception.exceptionName +suffix+ ".java";
         fileObj.formattedCode = formattedCode;
-        packageObj[exception.config.package].push(fileObj)
+        if (exception.config.package != null&&exception.config.package!=="") {
+            packageObj[exception.config.package].push(fileObj);
+        }else {
+            packageObj[exception.config.defaultPackage].push(fileObj);
+        }
 
     }
 
     for (let packageInfo in packageObj) {
-        let folder = zip.folder(packageInfo.replaceAll(".","\\"));
+        let folder = zip.folder(packageInfo.replaceAll(".","/"));
         for (let fileDataObj of packageObj[packageInfo]) {
             folder.file(fileDataObj.fileName,fileDataObj.formattedCode)
         }
