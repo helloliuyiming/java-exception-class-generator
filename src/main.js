@@ -1,13 +1,15 @@
-import Vue from 'vue'
+import { createApp } from 'vue'
 import App from './App.vue'
-import ElementUI from 'element-ui';
-import 'element-ui/lib/theme-chalk/index.css';
-import Plugin from 'v-fit-columns';
-Vue.use(Plugin);
+import { plugin as VueInputAutowidth } from 'vue-input-autowidth'
+import './index.css'
+import FitColumns from 'v-fit-columns';
 
-Vue.config.productionTip = false
-Vue.use(ElementUI);
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
 
-new Vue({
-  render: h => h(App),
-}).$mount('#app')
+
+let vue = createApp(App);
+    vue.use(ElementPlus)
+    .use(FitColumns)
+    .use(VueInputAutowidth)
+    .mount('#app');
