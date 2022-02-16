@@ -15,9 +15,9 @@
         </a>
 
         <ol class="space-x-6">
-          <li class="inline"><a href="#">文档</a> </li>
+          <li class="inline"><a href="https://github.com/helloliuyiming/java-exception-class-generator">文档</a> </li>
           <li class="inline"><a href="#">捐赠</a> </li>
-          <li class="inline"><a href="#">GitHub</a> </li>
+          <li class="inline"><a href="https://github.com/helloliuyiming/java-exception-class-generator">GitHub</a> </li>
         </ol>
       </el-row>
     </el-header>
@@ -34,9 +34,9 @@
         </div>
         <el-divider style="margin:8px 0 "/>
 
-        <el-tree-v2 :data="config.exceptions" :props="{'value':'id','label':'exceptionName', 'children':'subException'}">
+        <el-tree :data="config.exceptions" :props="{'value':'id','label':'exceptionName', 'children':'subException'}" >
 
-        </el-tree-v2>
+        </el-tree>
       </el-aside>
 
       <el-main class="p-4 space-y-4">
@@ -105,10 +105,10 @@
         </div>
 
         <el-table :data="config.exceptions" row-key="id" :tree-props="{'children':'subException', 'hasChildren':'true'}" border>
-          <el-table-column prop="exceptionName" label="类名">
+          <el-table-column prop="exceptionName" label="类名" width="350" fixed >
             <template #default="scope">
               <div class="inline" :class="{noSubException: (scope.row.subException === undefined || scope.row.subException === null || scope.row.subException.length===0)&&(scope.row.id.split(':').length<=1)}">
-                <input v-model="scope.row.exceptionName" placeholder="类名" v-autowidth class="w-24 px-2 py-0.5" style="width:120px;min-width: 120px;max-width: 200px"/>
+                <input v-model="scope.row.exceptionName" placeholder="类名" class="w-24 px-2 py-0.5" style="width:120px;min-width: 120px;max-width: 200px" @input="inputChange"/>
                 <div class="inline ml-4">
                   <el-button type="info" circle @click="createSiblingException(scope.row.id)">cp</el-button>
                   <el-button v-if="!scope.row.config.final" type="primary" circle @click="createSubException(scope.row.id)">de</el-button>
@@ -118,7 +118,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column v-for="column in config.cols" :prop="column.prop" :label="column.title">
+          <el-table-column v-for="column in config.cols" :prop="column.prop" :label="column.title" width="160">
             <template #default="scope">
               <div v-if="scope.row.fields[column.prop]===undefined">
                 <p class="text-center">---</p>
@@ -184,7 +184,7 @@ export default {
       exceptionGenerator.updateException(newException)
     },
     inputChange(event){
-      console.log(event)
+      // console.log(event.target.style.width)
     },
 
     createSubException(id) {

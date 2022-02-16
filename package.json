@@ -1,7 +1,6 @@
 {
   "name": "java-exception-class-generator",
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build"
@@ -10,7 +9,6 @@
     "@ungap/structured-clone": "^0.3.4",
     "element-plus": "^1.3.0-beta.7",
     "nanoid": "^3.3.0",
-    "nunjucks": "^3.2.3",
     "v-fit-columns": "^0.2.0",
     "vue": "^3.0.4",
     "vue-input-autowidth": "^2.2.0"

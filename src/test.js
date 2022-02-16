@@ -1,6 +1,6 @@
 import defaultConfig from "./data/defaultConfig.js";
 import structuredClone from '@ungap/structured-clone';
-require('nunjucks')
+let ejs = require('ejs')
 
 import {ExceptionGenerator} from "./ExceptionGenerator.js";
 

@@ -92,9 +92,10 @@ export class ExceptionGenerator{
         for (let baseField of baseExceptionFields) {
             baseException.fields[baseField.field] = Object()
             baseException.fields[baseField.field].type = baseField.type;
-
         }
+
         baseException.subException = Array()
+        this.manifest.config.settings.nextId++
         return baseException;
     }
 
