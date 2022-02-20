@@ -279,9 +279,12 @@ export class ExceptionGenerator{
 
         while (exceptions.length > 0) {
             let exception = exceptions.pop();
-            for (let e of exception.subException) {
-                exceptions.push(JSON.parse(JSON.stringify(e)));
+            if (exception.subException !== undefined && exception.subException !== null) {
+                for (let i = 0; i < exception.subException.length; i++) {
+                    exceptions.push(JSON.parse(JSON.stringify(exception.subException[i])));
+                }
             }
+
 
             let outFields = Array();
             for (const fieldsKey in exception.fields) {
@@ -299,16 +302,18 @@ export class ExceptionGenerator{
             exception.fields = outFields
             exception.requireGetter = true
             exception.requireSetter = true
+            exception.config.suffix = this.manifest.config.settings.suffix
             let parentExceptionId = exception.id.substring(0, exception.id.lastIndexOf(":"));
             if (parentExceptionId === "") {
                 exception.parentException = this.manifest.config.settings.baseException.className
             }else {
-                exception.parentException = this.queryById(parentExceptionId).exceptionName;
+                exception.parentException = this.queryById(parentExceptionId).exceptionName+exception.config.suffix;
             }
             if (exception.config.package == null||exception.config.package==="") {
                 exception.config.package = exception.config.defaultPackage
             }
-            exception.config.suffix = this.manifest.config.settings.suffix
+            exception.exceptionName = exception.exceptionName+exception.config.suffix;
+
             console.log("================================================================")
             const result = nunjucks.renderString(template, exception);
             console.log("generate:"+result)
