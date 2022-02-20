@@ -11,18 +11,18 @@
     </div>
     <el-divider/>
     <h5 class="text-lg">Configuration</h5>
-    <div class="flex mt-2">
+    <div class="flex mt-2 overflow-x-auto" style="scrollbar-width: none;">
 
       <div>
-        <el-table size="small" border fit :data="enumClass.properties">
-          <el-table-column label="value">
+        <el-table class="" border :data="enumClass.properties">
+          <el-table-column label="value" width="150" fixed>
             <template #default="scope">
               <div>
                 <el-input v-model="scope.row.enum"/>
               </div>
             </template>
           </el-table-column>
-          <el-table-column v-for="column in enumClass.cols" :label="column.name">
+          <el-table-column v-for="column in enumClass.cols" :label="column.name" width="120">
             <template #default="scope">
               <div v-if="column.type==='Boolean'">
                 <el-checkbox v-model="scope.row[column.name]"/>
@@ -123,5 +123,7 @@ export default {
 </script>
 
 <style scoped>
-
+::-webkit-scrollbar {
+  display: none;
+}
 </style>

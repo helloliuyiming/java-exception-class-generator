@@ -28,7 +28,7 @@
           <div class="flex mt-1" v-for="item in inheritFields">
             <span class="w-24 align-text-bottom align-bottom">{{ item.fieldName }}</span>
 
-            <el-input v-if="item.type!=='enum'" :placeholder="item.defaultValue" class="ml-4" v-model="item.value" style="width: 320px"></el-input>
+            <el-input v-if="item.type!=='enum'" :placeholder="item.defaultValue" class="ml-4 inline" v-model="item.value"></el-input>
             <div v-else>
               <el-select v-model="item.value">
 
@@ -42,7 +42,7 @@
       </div>
 
       <div>
-        <h5>fields</h5>
+        <p class="text-lg">fields</p>
         <div>
           <el-table :data="myFields">
             <el-table-column label="字段名" width="150">

@@ -81,3 +81,4 @@ let newExcepton = JSON.parse('{\n' +
 // exceptionGenerator.updateException(backupNewException)
 
 
+exceptionGenerator.generate()

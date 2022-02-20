@@ -31,6 +31,7 @@ export default {
   name: "EditEnumDialog",
   components:{EnumConfigurationComponent},
   props:["dialogVisible","enums","baseExceptionPackage","types"],
+  emits:["saveData","closeDialog"],
   data(){
     return {
       activeEnum:{}

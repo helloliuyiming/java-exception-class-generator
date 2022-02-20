@@ -1,5 +1,10 @@
 export default {
     "runtime": {
+        "exceptionsRefresh":true,
+        "exceptionNameColumnWidth":340,
+        "exceptionNameInputWidth":120,
+        "exceptionNameInputTextAlign":'center',
+        "exceptionNameColumnSuffixWidth":340,
          "editEnumDialogVisible": false,
          "editExceptionDialogVisible": false,
         "editException":{},
@@ -251,3 +256,7 @@ export default {
          ]
      }
  }
+
+
+
+

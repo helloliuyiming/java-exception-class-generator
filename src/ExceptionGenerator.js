@@ -1,4 +1,7 @@
 import structuredClone from '@ungap/structured-clone';
+import {template} from './exceptionTemplate'
+import JSZip from "jszip";
+import { saveAs } from 'file-saver';
 
 export class ExceptionGenerator{
 
@@ -145,7 +148,7 @@ export class ExceptionGenerator{
             if(parentException.subException === undefined){
             parentException.subException = Array()
             }
-        parentException.subException.push(this.generateSubException(id));
+        parentException.subException.push(this.generateSubException(parentExceptionId));
         }
     }
 
@@ -176,7 +179,10 @@ export class ExceptionGenerator{
         for (const myField of myFields) {
             newException.fields[myField.fieldName] = myField
             let col = {"prop":myField.fieldName,"title":myField.comments,"originExceptionId":oldException.id}
-            this.addCol(col)
+            if (col.title === null || col.title === '') {
+                col.title = myField
+            }
+            this.addCol(col);
         }
         delete newException.fields.myFields
         for (const inheritField of inheritFields) {
@@ -249,6 +255,71 @@ export class ExceptionGenerator{
     }
 
     generateException(exception) {
+
+    }
+
+    exportConfig(){
+        let blob = new Blob([JSON.stringify(this.manifest)], {type: 'text/json'});
+        let fileName = 'config.json'; // 文件名称
+        const link = document.createElement('a'); // 创建a标签
+        link.href = window.URL.createObjectURL(blob);
+        link.download = fileName;
+        link.click(); // 模拟点击a标签
+        window.URL.revokeObjectURL(link.href);
+    }
+
+    generate(){
+        let zip = new JSZip();
+        nunjucks.configure({ autoescape: true });
+
+        let exceptions = Array()
+        for (let exception of this.manifest.config.exceptions) {
+            exceptions.push(JSON.parse(JSON.stringify(exception)))
+        }
+
+        while (exceptions.length > 0) {
+            let exception = exceptions.pop();
+            for (let e of exception.subException) {
+                exceptions.push(JSON.parse(JSON.stringify(e)));
+            }
+
+            let outFields = Array();
+            for (const fieldsKey in exception.fields) {
+                let field = {
+                    field:fieldsKey,
+                    type:exception.fields[fieldsKey].type,
+                    final:exception.fields[fieldsKey].final,
+                    value:exception.fields[fieldsKey].value
+                }
+                if (field.value === undefined || field.value === null) {
+                    field.value = exception.fields[fieldsKey].defaultValue;
+                }
+                outFields.push(field)
+            }
+            exception.fields = outFields
+            exception.requireGetter = true
+            exception.requireSetter = true
+            let parentExceptionId = exception.id.substring(0, exception.id.lastIndexOf(":"));
+            if (parentExceptionId === "") {
+                exception.parentException = this.manifest.config.settings.baseException.className
+            }else {
+                exception.parentException = this.queryById(parentExceptionId).exceptionName;
+            }
+            if (exception.config.package == null||exception.config.package==="") {
+                exception.config.package = exception.config.defaultPackage
+            }
+            exception.config.suffix = this.manifest.config.settings.suffix
+            console.log("================================================================")
+            const result = nunjucks.renderString(template, exception);
+            console.log("generate:"+result)
+            let filePath = exception.config.package.replaceAll(".","/")+"/"+exception.exceptionName+".java"
+            zip.file(filePath,result)
+        }
+        zip.generateAsync({type:"blob"})
+            .then(function(content) {
+                // see FileSaver.js
+                saveAs(content, "exceptions.zip");
+            });
 
     }
 }
