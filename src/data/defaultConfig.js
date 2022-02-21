@@ -49,13 +49,9 @@ export default {
                         "type":"String"
                     }
                 ]
-            },
-            {
-                "classFullName":"",
-                "className": "自定义",
             }
         ],
-        "types": ["Integer","String","Float","Double","Boolean","Long","Enum"]
+        "types": ["Integer","String","Float","Double","Boolean","Long"]
     },
 
      "config": {
@@ -107,7 +103,7 @@ export default {
                  "cols":[
                      {
                          "name":"status",
-                         "type":"",
+                         "type":"String",
                          "defaultValue":"200"
                      }
                  ],

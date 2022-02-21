@@ -3,7 +3,10 @@
     <div class="flex">
       <el-tabs tab-position="left" closable @tab-click="tabClick" @tab-remove="tabRemove">
         <el-tab-pane v-for="item in enums" :label="item.name" :name="item.id" :key="item.id">
-          <enum-configuration-component :enum-class="item" :ref="item.id" :types="types"> </enum-configuration-component>
+          <template #label>
+            <el-input v-model="item.name" placeholder="枚举类名" style="width: 150px"/>
+          </template>
+          <enum-configuration-component :enum-class="item" :ref="item.id" :types="types" :baseExceptionPackage="baseExceptionPackage"> </enum-configuration-component>
         </el-tab-pane>
       </el-tabs>
 

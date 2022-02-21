@@ -32,9 +32,8 @@
         </div>
         <el-divider style="margin:8px 0 "/>
 
-        <el-tree :data="config.exceptions" :props="{'value':'id','label':'exceptionName', 'children':'subException'}" v-if="runtime.exceptionsRefresh" >
+        <el-tree :data="config.exceptions" :props="{'value':'id','label':'exceptionName', 'children':'subException'}" ref="treeDoc" />
 
-        </el-tree>
       </el-aside>
 
       <el-main class="p-4 space-y-4">
@@ -82,7 +81,7 @@
               <div>
                 <el-button type="info">导入配置</el-button>
                 <el-button type="success" @click="exportConfig">导出配置</el-button>
-                <el-button type="danger">重置</el-button>
+                <el-button type="danger" @click="test">重置</el-button>
                 <el-button type="primary" @click="generate">生成配置</el-button>
               </div>
               <el-button type="warning">分享配置</el-button>
@@ -100,7 +99,7 @@
           <h4>配置</h4>
         </div>
 
-        <el-table :data="config.exceptions" row-key="id" :tree-props="{'children':'subException', 'hasChildren':'true'}" border>
+        <el-table :data="config.exceptions" row-key="id" :tree-props="{'children':'subException', 'hasChildren':'true'}" border highlight-current-row>
           <el-table-column prop="exceptionName" label="类名" :width="runtime.exceptionNameColumnWidth" fixed >
             <template #default="scope">
               <div class="inline" :class="{noSubException: (scope.row.subException === undefined || scope.row.subException === null || scope.row.subException.length===0)&&(scope.row.id.split(':').length<=1)}">
@@ -121,20 +120,8 @@
               <div v-if="scope.row.fields[column.prop]===undefined">
                 <p class="text-center">---</p>
               </div>
-              <div v-else-if="scope.row.fields[column.prop].type.toLowerCase()==='string'">
-                <el-input v-model="scope.row.fields[column.prop].value" :placeholder="scope.row.fields[column.prop].defaultValue"></el-input>
-              </div>
-              <div v-else-if="scope.row.fields[column.prop].type.toLowerCase()==='integer'">
-                <el-input-number precision="0" v-model="scope.row.fields[column.prop].value" :placeholder="scope.row.fields[column.prop].defaultValue"></el-input-number>
-              </div>
-              <div v-else-if="scope.row.fields[column.prop].type.toLowerCase()==='boolean'">
-                <el-checkbox size="large" v-model="scope.row.fields[column.prop].value"></el-checkbox>
-              </div>
-              <div v-else-if="scope.row.fields[column.prop].type==='enum'">
-
-              </div>
               <div v-else>
-                <span>类型不支持</span>
+                <ValueInputComponent :placeholder="scope.row.fields[column.prop].defaultValue" :type="scope.row.fields[column.prop].type" :options-id="scope.row.fields[column.prop].options" :bind-value="scope.row.fields[column.prop].value" @change="v=>scope.row.fields[column.prop].value = (typeof v)==='object'?scope.row.value:v" :enums="config.enums"></ValueInputComponent>
               </div>
             </template>
           </el-table-column>
@@ -157,12 +144,12 @@ import {ExceptionGenerator} from "./ExceptionGenerator";
 import structuredClone from '@ungap/structured-clone';
 import EditExceptionDialog from "./components/EditExceptionDialog.vue";
 import EditEnumDialog from "./components/EditEnumDialog.vue";
+import ValueInputComponent from "./components/ValueInputComponent.vue";
 
 let exceptionGenerator
-let _this = this
 export default {
   name: 'App',
-  components: {EditEnumDialog, EditExceptionDialog},
+  components: {EditEnumDialog, EditExceptionDialog,ValueInputComponent},
   data(){
     return defaultConfig
   },
@@ -206,7 +193,7 @@ export default {
   },
   methods:{
     test(){
-      console.log("test")
+      this.$refs.treeDoc.$forceUpdate()
     },
     saveEnum(data){
       this.runtime.editEnumDialogVisible = false

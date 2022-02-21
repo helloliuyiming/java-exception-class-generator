@@ -3,7 +3,7 @@
 
     <div class="flex items-center">
       <span class="w-24">package</span>
-      <el-input v-model="enumClass.package" class="inline"></el-input>
+      <el-input v-model="enumClass.package" class="inline" :placeholder="baseExceptionPackage"></el-input>
     </div>
     <div class="flex mt-1 items-center">
       <span class="w-24 align-text-bottom">name</span>
@@ -44,19 +44,19 @@
         <div>
           <div class="flex mt-1 items-center">
             <span class="w-32">name</span>
-            <el-input v-model="editEnum.name" size="small"></el-input>
+            <el-input v-model="editEnum.name" class="inline"></el-input>
           </div>
 
           <div class="flex mt-1 items-center">
             <span class="w-32">type</span>
-            <el-select v-model="editEnum.type" size="small">
+            <el-select v-model="editEnum.type" class="inline">
               <el-option v-for="item in types" :key="item" :label="item" :value="item" :disabled="item.toLowerCase()==='enum'"></el-option>
             </el-select>
           </div>
 
           <div class="flex mt-1 items-center">
             <span class="w-32">defaultValue</span>
-            <el-input v-model="editEnum.defaultValue" size="small"></el-input>
+            <el-input v-model="editEnum.defaultValue"></el-input>
           </div>
 
         </div>
@@ -78,7 +78,7 @@ import { nanoid } from 'nanoid'
 
 export default {
   name: "EnumConfigurationComponent",
-  props:["enumClass","types"],
+  props:["enumClass","types","baseExceptionPackage"],
   data(){
     return{
       addColDialogVisible:false,

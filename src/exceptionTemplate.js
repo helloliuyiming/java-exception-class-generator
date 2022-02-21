@@ -20,12 +20,14 @@ public{%if final %} final{% endif %} class {{exceptionName}} extends {{parentExc
     
     {%if requireGetter %}{% for field in fields %} public {%if field.final %} final {% endif %} {{field.type}} get{{field.field | capitalize}}(){
         return this.{{field.field}};
-    }{% endfor %}{% endif %}
+    }
+    {% endfor %}{% endif %}
     
     
     {%if requireSetter %}{% for field in fields %}public {%if field.final %} final {% endif %} void set{{field.field | capitalize}}({{field.type}} {{field.field}}){
         this.{{field.field}} = {{field.field}};
-    }{% endfor %}{% endif %}
+    }
+    {% endfor %}{% endif %}
     
 }
 `

@@ -53,7 +53,7 @@
 
             <el-table-column label="类型" width="150">
               <template #default="scope">
-                <el-select v-model="scope.row.type">
+                <el-select v-model="scope.row.type" @change="formatType(scope.row)">
                   <el-option-group label="基本类型">
                     <el-option v-for="item in types"
                                :label="item"
@@ -68,20 +68,20 @@
                     </el-option-group>
                   </el-option-group>
 
-
                 </el-select>
               </template>
             </el-table-column>
 
             <el-table-column label="默认值" width="150">
               <template #default="scope">
-                <el-select v-if="scope.row.type.indexOf('enum-')===0"  v-model="scope.row.value" >
-                  <el-option v-for="item in loadEnumPropertiesByEnumId(scope.row.type.substring(5))"
-                             :label = "item.enum"
-                             :key="item.enum"
-                             :value="item.enum"></el-option>
-                </el-select>
-                <el-input v-else v-model="scope.row.value" :placeholder="scope.row.originField"></el-input>
+                <ValueInputComponent :placeholder="scope.row.originField" :type="scope.row.type" :options-id="scope.row.options" :bind-value="scope.row.value" @change="v=>scope.row.value = (typeof v)==='object'?scope.row.value:v" :enums="enums"></ValueInputComponent>
+<!--                <el-select v-if="scope.row.type.indexOf('enum-')===0"  v-model="scope.row.value" >-->
+<!--                  <el-option v-for="item in loadEnumPropertiesByEnumId(scope.row.type.substring(5))"-->
+<!--                             :label = "item.enum"-->
+<!--                             :key="item.enum"-->
+<!--                             :value="item.enum"></el-option>-->
+<!--                </el-select>-->
+<!--                <el-input v-else v-model="scope.row.value" :placeholder="scope.row.originField"></el-input>-->
               </template>
             </el-table-column>
 
@@ -118,7 +118,7 @@
 
 <script>
 import structuredClone from "@ungap/structured-clone";
-
+import ValueInputComponent from "./ValueInputComponent.vue";
 export default {
   name: "EditExceptionDialog",
   props:[
@@ -128,6 +128,7 @@ export default {
       "enums",
       "settings"
   ],
+  components:{ValueInputComponent},
   emits:["saveData","closeDialog"],
   created() {
 
@@ -136,7 +137,7 @@ export default {
   data(){
     return {
       myFields:[],
-      inheritFields:[]
+      inheritFields:[],
     }
   },
   watch:{
@@ -168,7 +169,7 @@ export default {
       this.$data.inheritFields = inheritFields
       this.$data.myFields = myFields
 
-    }
+    },
   },
   methods:{
     addField(){
@@ -204,6 +205,9 @@ export default {
           myField.options = myField.type.substring(5)
           myField.type = 'enum'
         }
+        if (myField.comments === ""||myField.comments===null) {
+          myField.comments = myField.fieldName;
+        }
       }
       this.$emit("saveData",newException)
     },
@@ -214,6 +218,10 @@ export default {
       let e = this.enums.find(element=>element.id===enumId);
       if (e===null) return [];
       return e.properties;
+    },
+    formatType(field){
+      field.options = field.type.substring(5)
+      field.type = "enum"
     }
   }
 }

@@ -1,5 +1,6 @@
 import structuredClone from '@ungap/structured-clone';
 import {template} from './exceptionTemplate'
+import {enumTemplate} from './enumTemplate'
 import JSZip from "jszip";
 import { saveAs } from 'file-saver';
 
@@ -269,8 +270,19 @@ export class ExceptionGenerator{
     }
 
     generate(){
+
         let zip = new JSZip();
         nunjucks.configure({ autoescape: true });
+
+        let enums = this.manifest.config.enums;
+        for (const enumItem of enums) {
+            if (enumItem.package === undefined || enumItem.package === "") {
+                enumItem.package = this.manifest.config.settings.basePackage+'.enums'
+            }
+            let result = nunjucks.renderString(enumTemplate,enumItem);
+            let filePath = enumItem.package.replaceAll(".","/")+"/"+enumItem.name+".java"
+            zip.file(filePath,result)
+        }
 
         let exceptions = Array()
         for (let exception of this.manifest.config.exceptions) {
