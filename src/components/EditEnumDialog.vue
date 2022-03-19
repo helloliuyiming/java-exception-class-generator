@@ -45,6 +45,11 @@ export default {
       this.$emit("closeDialog")
     },
     saveData(){
+      for (let e of this.enums) {
+        if (e.package == null || e.package === '') {
+          e.package = this.$props.baseExceptionPackage
+        }
+      }
       this.$emit("saveData",this.enums)
     },
     tabClick(){

@@ -99,7 +99,10 @@
           <h4>配置</h4>
         </div>
 
-        <el-table :data="config.exceptions" row-key="id" :tree-props="{'children':'subException', 'hasChildren':'true'}" border highlight-current-row>
+        <el-table
+            ref="tree"
+            :data="config.exceptions" row-key="id" :tree-props="{'children':'subException', 'hasChildren':'true'}"
+                  border highlight-current-row @row-contextmenu="openMenu">
           <el-table-column prop="exceptionName" label="类名" :width="runtime.exceptionNameColumnWidth" fixed >
             <template #default="scope">
               <div class="inline" :class="{noSubException: (scope.row.subException === undefined || scope.row.subException === null || scope.row.subException.length===0)&&(scope.row.id.split(':').length<=1)}">
@@ -133,6 +136,7 @@
 
   <edit-exception-dialog :dialog-visible="runtime.editExceptionDialogVisible" :exception="runtime.editException" :types="options.types" :enums="config.enums" @closeDialog="runtime.editExceptionDialogVisible = false" @saveData = "saveOrUpdateException"/>
   <edit-enum-dialog  :dialog-visible="runtime.editEnumDialogVisible" :enums="config.enums" :types="options.types" :base-exception-package="config.settings.basePackage+'.enums'" @closeDialog="runtime.editEnumDialogVisible = false" @saveData="saveEnum"/>
+
 </div>
 </template>
 
@@ -192,6 +196,14 @@ export default {
     // exceptionGenerator.generate()
   },
   methods:{
+    openMenu(row, column, event){
+      if (column.property !== 'exceptionName') return
+      event.preventDefault()
+
+
+      console.log(this.$refs["tree"])
+
+    },
     test(){
       this.$refs.treeDoc.$forceUpdate()
     },

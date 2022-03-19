@@ -133,7 +133,13 @@ export class ExceptionGenerator{
         newException.config = Object();
         newException.config.final = false;
         newException.config.package = null;
-        newException.config.defaultPackage = parentException.config.package;
+        console.log("parentException.config.package:"+parentException.config.package)
+        console.log("parentException.config.defaultPackage:"+parentException.config.defaultPackage)
+        if (parentException.config.package != null&&parentException.config.package !== '') {
+            newException.config.defaultPackage = parentException.config.package;
+        }else {
+            newException.config.defaultPackage = parentException.config.defaultPackage;
+        }
         newException.subException = Array()
         return newException;
     }
@@ -280,7 +286,7 @@ export class ExceptionGenerator{
                 enumItem.package = this.manifest.config.settings.basePackage+'.enums'
             }
             let result = nunjucks.renderString(enumTemplate,enumItem);
-            let filePath = enumItem.package.replaceAll(".","/")+"/"+enumItem.name+".java"
+            let filePath = enumItem.package.replaceAll(".","/")+"/"+enumItem.name+".java";
             zip.file(filePath,result)
         }
 
@@ -291,6 +297,7 @@ export class ExceptionGenerator{
 
         while (exceptions.length > 0) {
             let exception = exceptions.pop();
+            if(exception.exceptionName===null || exception.exceptionName === '') continue;
             if (exception.subException !== undefined && exception.subException !== null) {
                 for (let i = 0; i < exception.subException.length; i++) {
                     exceptions.push(JSON.parse(JSON.stringify(exception.subException[i])));

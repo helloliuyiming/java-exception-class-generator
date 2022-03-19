@@ -220,8 +220,12 @@ export default {
       return e.properties;
     },
     formatType(field){
-      field.options = field.type.substring(5)
-      field.type = "enum"
+      if (field.type.split("-").length === 2) {
+        field.options = field.type.substring(5)
+        field.type = "enum"
+      }
+
+
     }
   }
 }
