@@ -1,10 +1,10 @@
 <template>
   <el-dialog :close-on-click-modal='false' :close-on-press-escape='false' v-model="dialogVisible" title="编辑Enum">
     <div class="flex">
-      <el-tabs tab-position="left" closable @tab-click="tabClick" @tab-remove="tabRemove">
+      <el-tabs @keydown.native.delete.capture.stop.prevent tab-position="left" closable @tab-click="tabClick" @tab-remove="tabRemove">
         <el-tab-pane v-for="item in enums" :label="item.name" :name="item.id" :key="item.id">
           <template #label>
-            <el-input v-model="item.name" placeholder="枚举类名" style="width: 150px"/>
+            <el-button  placeholder="枚举类名" style="width: 150px" >{{item.name}}</el-button>
           </template>
           <enum-configuration-component :enum-class="item" :ref="item.id" :types="types" :baseExceptionPackage="baseExceptionPackage"> </enum-configuration-component>
         </el-tab-pane>
