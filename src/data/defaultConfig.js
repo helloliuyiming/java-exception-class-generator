@@ -127,7 +127,7 @@ export default {
          "exceptions": [
              {
                  "id": "l1",
-                 "exceptionName": "Server",
+                 "exceptionName": "Server1",
                  "fields": {
                      "message":{
                          "value": "",
@@ -147,7 +147,7 @@ export default {
                  "subException": [
                      {
                          "id": "l1:l1",
-                         "exceptionName": "BadRequest",
+                         "exceptionName": "BadRequest1",
                          "config": {
                              "final": false,
                              "package": "",
@@ -167,7 +167,7 @@ export default {
                      },
                      {
                          "id": "l1:l2",
-                         "exceptionName": "BadGateway",
+                         "exceptionName": "BadGateway1",
                          "config": {
                              "final": true,
                              "package": "",
@@ -189,7 +189,7 @@ export default {
              },
              {
                  "id": "l2",
-                 "exceptionName": "Server",
+                 "exceptionName": "Server2",
                  "fields": {
                      "message":{
                          "value": "",
@@ -209,7 +209,7 @@ export default {
                  "subException": [
                      {
                          "id": "l2:l1",
-                         "exceptionName": "BadRequest",
+                         "exceptionName": "BadRequest2",
                          "config": {
                              "final": false,
                              "package": "",
@@ -229,7 +229,7 @@ export default {
                      },
                      {
                          "id": "l2:l2",
-                         "exceptionName": "BadGateway",
+                         "exceptionName": "BadGateway2",
                          "config": {
                              "final": true,
                              "package": "",

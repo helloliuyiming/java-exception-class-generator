@@ -9,7 +9,6 @@
           <enum-configuration-component :enum-class="item" :ref="item.id" :types="types" :baseExceptionPackage="baseExceptionPackage"> </enum-configuration-component>
         </el-tab-pane>
       </el-tabs>
-
     </div>
 
     <template #footer>

@@ -192,7 +192,7 @@ export default {
   mounted() {
     this.logo = logo
     this.addIcon = addIcon
-    exceptionGenerator = new ExceptionGenerator(this)
+    exceptionGenerator = new ExceptionGenerator(this.$data)
     // exceptionGenerator.generate()
   },
   methods:{
